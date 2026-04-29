@@ -1,0 +1,43 @@
+[project]
+name = "gamerec-mlops"
+version = "0.1.0"
+description = "Hybrid game recommender + classifier + regressor + clustering + seasonality, served via FastAPI."
+# Cap below 3.14: NumPy / scientific wheels on Windows are still catching up; 3.14
+# has been observed to crash with native access violations during import.
+requires-python = ">=3.11,<3.14"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    "Game_Recommender_Simple.ipynb",
+    "Video_Game_Recommender_ML_Project.ipynb",
+    "test.ipynb",
+    "artifacts/",
+    "Datasets/",
+    "report/",
+    ".venv/",
+    "build/",
+    "dist/",
+]
+
+[tool.ruff.lint]
+# Keep the rule set tight but useful: pycodestyle errors, pyflakes,
+# isort import ordering, plus a couple of bug-bear patterns.
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = [
+    "E501",   # line length: handled by formatter, doesn't need to fail CI
+    "B008",   # function calls in default args (FastAPI Depends pattern)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+"pipelines/*" = ["E402"]   # late imports (after Prefect setup) are intentional
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning:prefect.*",
+    "ignore::DeprecationWarning:pydantic.*",
+]

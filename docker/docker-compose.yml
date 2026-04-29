@@ -1,0 +1,14 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: gamerec-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      GAMEREC_ARTIFACTS_DIR: /app/artifacts/recommender
+      GAMEREC_CORS_ORIGINS: "*"
+    volumes:
+      # Mount precomputed notebook artifacts read-only (not baked into image).
+      - ../artifacts/recommender:/app/artifacts/recommender:ro

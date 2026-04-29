@@ -1,0 +1,16 @@
+\section{Experimental results (placeholders)}
+\noindent\textbf{Insert notebook exports.} This skeleton reserves space for quantitative tables. Recommended tables:
+\begin{itemize}
+\item Hybrid recommender ablation: TF--IDF only vs.\ latent-only vs.\ blended vs.\ blended+floor on held-out cosine proxy metrics (genre overlap, tag Jaccard\@$k$).
+\item Player-type per-label precision/recall/F1 and macro ROC-AUC.
+\item Popularity regression MAE/RMSE/$R^2$ plus residual extremes (best/worst predicted).
+\item Cluster silhouette sweep $k\in\{8,10,12,14,16\}$ and qualitative cluster cards.
+\item Seasonality shape error table: Horror vs.\ RPG baseline improvements.
+\end{itemize}
+
+\noindent\textbf{Figures.} Place PNG/PDF exports under \texttt{report/figures/} and reference them here, e.g.:
+\begin{verbatim}
+\includegraphics[width=\linewidth]{figures/seasonality_index.pdf}
+\end{verbatim}
+
+\noindent\textbf{Narrative prompts for teammates.} Discuss failure cases: tag synonyms, duplicate remasters, RAWG spurious lowercase tags inflating lift, and Steam review bombs shifting targets without changing metadata.

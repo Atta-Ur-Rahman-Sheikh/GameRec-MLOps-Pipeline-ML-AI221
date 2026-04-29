@@ -3,3 +3,6 @@ Datasets/RAWG Dataset/rawg-games-dataset.parquet
 Datasets/RAWG Dataset/jsonl/rawg_data.jsonl
 Datasets/Steam Dataset/games.csv
 Datasets/Steam Dataset/games.json
+
+# Generated recommender artifacts (rebuild via Game_Recommender_Simple.ipynb)
+artifacts/

@@ -1,0 +1,7 @@
+-r requirements.txt
+
+pytest>=7.4,<9.0
+pytest-cov>=4.1,<6.0
+httpx>=0.26,<1.0          # used by FastAPI's TestClient
+ruff>=0.4,<1.0
+nbformat>=5.9,<6.0        # used by tests/fixtures/build_fixtures.py

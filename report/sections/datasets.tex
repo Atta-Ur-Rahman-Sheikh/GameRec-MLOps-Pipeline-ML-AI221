@@ -1,0 +1,14 @@
+\section{Datasets and integration}
+\subsection{Steam store dump}
+The Steam side provides tab-separated or CSV-style rows per \texttt{AppID}, including \texttt{name}, \texttt{About the game} prose, \texttt{Genres}, \texttt{Categories}, \texttt{Tags}, review counts (\texttt{Positive}, \texttt{Negative}), and platform booleans. A known CSV quirk required explicit handling: an unnamed leading index column shifted every header; correcting this alignment was critical to avoid treating release dates as titles.
+
+We filter ultra-low-review noise with a permissive minimum to retain catalogue breadth, accepting that long-tail games dominate.
+
+\subsection{RAWG JSONL}
+RAWG contributes normalized genres, community tags, platform labels, aggregator ratings, vote counts, and structured release dates (ISO-8601) \cite{rawg}. Streaming line-by-line keeps memory bounded on multi-gigabyte dumps.
+
+\subsection{Merge strategy}
+Titles are normalized to alphanumeric lowercase keys for inner joins. List-valued fields (genres, tags, platforms) are unioned with de-duplication. Descriptions are concatenated for richer TF--IDF signal. Numeric ratings are harmonized, and a global Bayesian prior smooth per-item scores into a 0--5 \texttt{popularity} target used throughout downstream tasks.
+
+\subsection{Ethics and bias}
+Community tags encode cultural stereotypes, regional popularity, and English-language bias. Automated labelling inherits these biases; we surface interpretable rules and allow manual cluster renaming in reports.
