@@ -233,23 +233,25 @@ def _synthetic_catalog() -> pd.DataFrame:
 def main():
     src = settings.artifacts_dir
     if not src.exists():
-        raise SystemExit(f"Real artifacts dir not found at {src}; build them first.")
-
-    print(f"Loading real artifacts from {src} ...")
-    catalog_path = src / "catalog.parquet"
-    if not catalog_path.exists():
-        catalog_path = src / "catalog.pkl"
-    try:
-        catalog = (
-            pd.read_parquet(catalog_path)
-            if catalog_path.suffix == ".parquet"
-            else pd.read_pickle(catalog_path)
-        )
-        print(f"  full catalog: {len(catalog):,} games")
-    except Exception as exc:  # noqa: BLE001
-        print(f"  failed to read real catalog ({type(exc).__name__}); using synthetic fallback")
+        print(f"Real artifacts dir not found at {src}; using synthetic fallback.")
         catalog = _synthetic_catalog()
         print(f"  synthetic catalog: {len(catalog):,} games")
+    else:
+        print(f"Loading real artifacts from {src} ...")
+        catalog_path = src / "catalog.parquet"
+        if not catalog_path.exists():
+            catalog_path = src / "catalog.pkl"
+        try:
+            catalog = (
+                pd.read_parquet(catalog_path)
+                if catalog_path.suffix == ".parquet"
+                else pd.read_pickle(catalog_path)
+            )
+            print(f"  full catalog: {len(catalog):,} games")
+        except Exception as exc:  # noqa: BLE001
+            print(f"  failed to read real catalog ({type(exc).__name__}); using synthetic fallback")
+            catalog = _synthetic_catalog()
+            print(f"  synthetic catalog: {len(catalog):,} games")
 
     # Choose the subset: top by popularity + any famous titles we can find.
     famous_idx = []

@@ -19,7 +19,17 @@ PROJECT_ROOT = TESTS_DIR.parent
 REAL_ARTIFACTS = PROJECT_ROOT / "artifacts" / "recommender"
 
 
+def _ensure_fixture_artifacts() -> None:
+    """Create fixture artifacts on demand when the fixture dir is empty."""
+    if FIXTURE_ARTIFACTS.exists() and any(FIXTURE_ARTIFACTS.iterdir()):
+        return
+    from tests.fixtures.build_fixtures import main as build_fixture_artifacts
+
+    build_fixture_artifacts()
+
+
 def _resolve_artifacts_dir() -> Path:
+    _ensure_fixture_artifacts()
     if FIXTURE_ARTIFACTS.exists() and any(FIXTURE_ARTIFACTS.iterdir()):
         return FIXTURE_ARTIFACTS
     return REAL_ARTIFACTS
