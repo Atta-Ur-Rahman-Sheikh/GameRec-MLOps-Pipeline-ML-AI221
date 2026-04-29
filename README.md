@@ -29,9 +29,10 @@ Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for Swagger UI.
 
 ### Troubleshooting installs (Windows)
 
-- **Use Python 3.11 or 3.12** in a **fresh virtualenv** (`python -m venv .venv`). Python **3.14** is often too new: NumPy can hit **access violations** on import before tests even run.
+- **Use Python 3.11, 3.12, or 3.13** in a **fresh virtualenv** (`python -m venv .venv`). Python **3.14** is often too new: NumPy can hit **access violations** on import before tests even run.
 - If `pip install` **times out**, retry or use a faster network / `pip install --retries 10`.
 - **Dependency conflicts** (e.g. a globally installed `mlxtend` wanting newer NumPy than this project): prefer a clean venv with **only** `requirements-dev.txt`; avoid mixing unrelated user-site packages.
+- If notebooks fail to start a kernel in VS Code/Jupyter, run `python -m ipykernel install --user --name gamerec-mlops --display-name "Python (GameRec .venv)"` from the activated project virtualenv and then select that kernel.
 
 ### Required artifacts
 

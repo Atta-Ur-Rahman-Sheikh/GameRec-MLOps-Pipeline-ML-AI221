@@ -6,3 +6,17 @@ Datasets/Steam Dataset/games.json
 
 # Generated recommender artifacts (rebuild via Game_Recommender_Simple.ipynb)
 artifacts/
+
+# Python caches / local environments
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Optional local interpreter pin (not needed in repo)
+.python-version
