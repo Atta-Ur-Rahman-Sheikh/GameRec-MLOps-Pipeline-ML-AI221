@@ -69,8 +69,17 @@ class ArtifactBundle:
     @property
     def is_minimal_ready(self) -> bool:
         """True once recommender artifacts (catalog + tfidf + svd + lsa) are loaded."""
-        return all(x is not None for x in [self.catalog, self.vectorizer, self.tfidf,
-                                            self.svd, self.lsa_norm, self.pop_norm])
+        return all(
+            x is not None
+            for x in [
+                self.catalog,
+                self.vectorizer,
+                self.tfidf,
+                self.svd,
+                self.lsa_norm,
+                self.pop_norm,
+            ]
+        )
 
 
 _BUNDLE: ArtifactBundle | None = None
@@ -121,8 +130,9 @@ def _content_richness(catalog: pd.DataFrame) -> np.ndarray:
 
 
 def _normalise_popularity(popularity: np.ndarray) -> np.ndarray:
-    return ((popularity - popularity.min()) / (popularity.max() - popularity.min() + 1e-9)
-            ).astype(np.float32)
+    return ((popularity - popularity.min()) / (popularity.max() - popularity.min() + 1e-9)).astype(
+        np.float32
+    )
 
 
 # --------------------------------------------------------------------- public API
@@ -150,57 +160,76 @@ def load_bundle(cfg: Settings | None = None, force: bool = False) -> ArtifactBun
             bundle.missing.append("catalog")
             log.warning("artifact missing: catalog -> expected at %s/catalog.{parquet,pkl}", adir)
 
-        bundle.vectorizer = _load_or_warn(joblib.load, adir / "tfidf_vectorizer.joblib",
-                                          bundle.missing, "tfidf_vectorizer")
-        bundle.tfidf = _load_or_warn(sp.load_npz, adir / "tfidf_matrix.npz",
-                                     bundle.missing, "tfidf_matrix")
-        bundle.svd = _load_or_warn(joblib.load, adir / "svd.joblib",
-                                   bundle.missing, "svd")
-        bundle.lsa_norm = _load_or_warn(np.load, adir / "lsa_matrix.npy",
-                                        bundle.missing, "lsa_matrix")
-        bundle.pop_norm = _load_or_warn(np.load, adir / "popularity.npy",
-                                        bundle.missing, "popularity")
+        bundle.vectorizer = _load_or_warn(
+            joblib.load, adir / "tfidf_vectorizer.joblib", bundle.missing, "tfidf_vectorizer"
+        )
+        bundle.tfidf = _load_or_warn(
+            sp.load_npz, adir / "tfidf_matrix.npz", bundle.missing, "tfidf_matrix"
+        )
+        bundle.svd = _load_or_warn(joblib.load, adir / "svd.joblib", bundle.missing, "svd")
+        bundle.lsa_norm = _load_or_warn(
+            np.load, adir / "lsa_matrix.npy", bundle.missing, "lsa_matrix"
+        )
+        bundle.pop_norm = _load_or_warn(
+            np.load, adir / "popularity.npy", bundle.missing, "popularity"
+        )
 
         # Player-type classifier (joblib bundle stores both clf + label list).
-        clf_pkg = _load_or_warn(joblib.load, adir / "player_type_classifier.joblib",
-                                bundle.missing, "player_type_classifier")
+        clf_pkg = _load_or_warn(
+            joblib.load,
+            adir / "player_type_classifier.joblib",
+            bundle.missing,
+            "player_type_classifier",
+        )
         if clf_pkg is not None:
             bundle.player_clf = clf_pkg.get("clf")
             bundle.player_type_names = list(clf_pkg.get("labels", []))
 
-        rules = _load_or_warn(lambda p: json.loads(p.read_text(encoding="utf-8")),
-                              adir / "player_types_rules.json",
-                              bundle.missing, "player_types_rules")
+        rules = _load_or_warn(
+            lambda p: json.loads(p.read_text(encoding="utf-8")),
+            adir / "player_types_rules.json",
+            bundle.missing,
+            "player_types_rules",
+        )
         if rules is not None:
             bundle.player_types_rules = rules
 
         # Popularity regressor + its feature-spec metadata.
-        reg_pkg = _load_or_warn(joblib.load, adir / "popularity_regressor.joblib",
-                                bundle.missing, "popularity_regressor")
+        reg_pkg = _load_or_warn(
+            joblib.load,
+            adir / "popularity_regressor.joblib",
+            bundle.missing,
+            "popularity_regressor",
+        )
         if reg_pkg is not None:
             bundle.popularity_model = reg_pkg.get("model")
-            bundle.popularity_meta = {
-                k: v for k, v in reg_pkg.items() if k != "model"
-            }
+            bundle.popularity_meta = {k: v for k, v in reg_pkg.items() if k != "model"}
 
         # KMeans + hidden-genre cards (optional).
-        clu_pkg = _load_or_warn(joblib.load, adir / "kmeans_clusters.joblib",
-                                bundle.missing, "kmeans_clusters")
+        clu_pkg = _load_or_warn(
+            joblib.load, adir / "kmeans_clusters.joblib", bundle.missing, "kmeans_clusters"
+        )
         if clu_pkg is not None:
             bundle.kmeans = clu_pkg.get("model")
             raw_names = clu_pkg.get("names", {}) or {}
             bundle.cluster_names = {int(k): str(v) for k, v in raw_names.items()}
 
-        cards = _load_or_warn(lambda p: json.loads(p.read_text(encoding="utf-8")),
-                              adir / "cluster_cards.json",
-                              bundle.missing, "cluster_cards")
+        cards = _load_or_warn(
+            lambda p: json.loads(p.read_text(encoding="utf-8")),
+            adir / "cluster_cards.json",
+            bundle.missing,
+            "cluster_cards",
+        )
         if cards is not None:
             bundle.cluster_cards = cards
 
         # Seasonality (optional).
-        season = _load_or_warn(lambda p: json.loads(p.read_text(encoding="utf-8")),
-                               adir / "seasonality.json",
-                               bundle.missing, "seasonality")
+        season = _load_or_warn(
+            lambda p: json.loads(p.read_text(encoding="utf-8")),
+            adir / "seasonality.json",
+            bundle.missing,
+            "seasonality",
+        )
         if season is not None:
             bundle.seasonality = season
 
@@ -221,7 +250,11 @@ def load_bundle(cfg: Settings | None = None, force: bool = False) -> ArtifactBun
                 if bundle.lsa_norm is not None:
                     bundle.catalog["cluster_id"] = bundle.kmeans.predict(bundle.lsa_norm)
 
-        if bundle.pop_norm is None and bundle.catalog is not None and "popularity" in bundle.catalog.columns:
+        if (
+            bundle.pop_norm is None
+            and bundle.catalog is not None
+            and "popularity" in bundle.catalog.columns
+        ):
             # Synthesise from catalog if persisted file is missing.
             pop_raw = bundle.catalog["popularity"].to_numpy(dtype=np.float32)
             bundle.popularity = pop_raw

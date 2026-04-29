@@ -15,8 +15,9 @@ from app.services._text import build_query_text
 from app.services.recommender import find_game_index
 
 
-def _format_proba(proba: np.ndarray, label_names: list[str],
-                  top_k: int | None, threshold: float) -> list[dict[str, Any]]:
+def _format_proba(
+    proba: np.ndarray, label_names: list[str], top_k: int | None, threshold: float
+) -> list[dict[str, Any]]:
     rows = [
         {
             "archetype": label_names[j],
@@ -29,9 +30,12 @@ def _format_proba(proba: np.ndarray, label_names: list[str],
     return rows[:top_k] if top_k else rows
 
 
-def predict_player_types(title: str, top_k: int | None = None,
-                         threshold: float = 0.5,
-                         bundle: ArtifactBundle | None = None) -> dict[str, Any]:
+def predict_player_types(
+    title: str,
+    top_k: int | None = None,
+    threshold: float = 0.5,
+    bundle: ArtifactBundle | None = None,
+) -> dict[str, Any]:
     """Predict archetype scores for an existing catalog game."""
     bundle = bundle or get_bundle()
     if bundle.player_clf is None or bundle.lsa_norm is None:
@@ -39,18 +43,20 @@ def predict_player_types(title: str, top_k: int | None = None,
     idx = find_game_index(title, bundle)
     if idx is None:
         raise KeyError(f"No game found matching {title!r}")
-    proba = bundle.player_clf.predict_proba(bundle.lsa_norm[idx:idx + 1])[0]
+    proba = bundle.player_clf.predict_proba(bundle.lsa_norm[idx : idx + 1])[0]
     return {
         "title": str(bundle.catalog.iloc[idx]["name"]),
         "predictions": _format_proba(proba, bundle.player_type_names, top_k, threshold),
     }
 
 
-def predict_for_query(liked_genres: list[str] | None = None,
-                      liked_tags: list[str] | None = None,
-                      top_k: int | None = None,
-                      threshold: float = 0.5,
-                      bundle: ArtifactBundle | None = None) -> dict[str, Any]:
+def predict_for_query(
+    liked_genres: list[str] | None = None,
+    liked_tags: list[str] | None = None,
+    top_k: int | None = None,
+    threshold: float = 0.5,
+    bundle: ArtifactBundle | None = None,
+) -> dict[str, Any]:
     """Cold-start prediction: score archetypes for a hypothetical game."""
     bundle = bundle or get_bundle()
     if bundle.player_clf is None or bundle.svd is None or bundle.vectorizer is None:

@@ -18,9 +18,9 @@ def _count_lists(series) -> Counter:
     return c
 
 
-def cluster_distinctive_tags(cid: int, top_n: int = 6, min_in_cluster: int = 10,
-                             bundle: ArtifactBundle | None = None
-                             ) -> list[tuple[str, float, int]]:
+def cluster_distinctive_tags(
+    cid: int, top_n: int = 6, min_in_cluster: int = 10, bundle: ArtifactBundle | None = None
+) -> list[tuple[str, float, int]]:
     """Return tags most over-represented in cluster `cid` vs the catalog."""
     bundle = bundle or get_bundle()
     catalog = bundle.catalog
@@ -53,8 +53,9 @@ def list_clusters(bundle: ArtifactBundle | None = None) -> list[dict[str, Any]]:
     return list(bundle.cluster_cards)
 
 
-def discover_hidden_genre(game_query: str, n_similar: int = 8,
-                          bundle: ArtifactBundle | None = None) -> dict[str, Any]:
+def discover_hidden_genre(
+    game_query: str, n_similar: int = 8, bundle: ArtifactBundle | None = None
+) -> dict[str, Any]:
     """Find the latent genre of a game and surface similar titles."""
     bundle = bundle or get_bundle()
     catalog = bundle.catalog

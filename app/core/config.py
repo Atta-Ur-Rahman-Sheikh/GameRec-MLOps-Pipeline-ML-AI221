@@ -26,7 +26,7 @@ class Settings:
     cors_allow_origins: list[str]
 
     @classmethod
-    def from_env(cls) -> "Settings":
+    def from_env(cls) -> Settings:
         root = _project_root()
         artifacts = Path(
             os.environ.get("GAMEREC_ARTIFACTS_DIR", root / "artifacts" / "recommender")

@@ -16,7 +16,6 @@ from sklearn.preprocessing import normalize
 from app.core.artifacts import ArtifactBundle, get_bundle
 from app.services._text import build_query_text, norm_key
 
-
 # ---------------------------------------------------------------- platform aliasing
 
 PLATFORM_ALIASES: dict[str, set[str]] = {
@@ -49,6 +48,7 @@ def _platform_mask(catalog, platforms: list[str] | None) -> np.ndarray:
 
 # ---------------------------------------------------------------- title -> idx
 
+
 def find_game_index(title: str, bundle: ArtifactBundle | None = None) -> int | None:
     """Resolve a free-form title to a row index in `catalog`.
 
@@ -75,8 +75,9 @@ def find_game_index(title: str, bundle: ArtifactBundle | None = None) -> int | N
     return None
 
 
-def search_games(query: str, limit: int = 10,
-                 bundle: ArtifactBundle | None = None) -> list[dict[str, Any]]:
+def search_games(
+    query: str, limit: int = 10, bundle: ArtifactBundle | None = None
+) -> list[dict[str, Any]]:
     """Return up to `limit` catalog rows whose name contains `query`."""
     bundle = bundle or get_bundle()
     catalog = bundle.catalog
@@ -99,16 +100,24 @@ def search_games(query: str, limit: int = 10,
 
 # ---------------------------------------------------------------- core scoring
 
-def _hybrid_scores_for_anchor(idx: int, bundle: ArtifactBundle) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+def _hybrid_scores_for_anchor(
+    idx: int, bundle: ArtifactBundle
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     sim_text = cosine_similarity(bundle.tfidf[idx], bundle.tfidf).ravel()
     sim_lsa = bundle.lsa_norm @ bundle.lsa_norm[idx]
     return sim_lsa, sim_text, bundle.pop_norm
 
 
-def recommend_similar(title: str, top_k: int = 10,
-                      w_lsa: float = 0.55, w_text: float = 0.30, w_pop: float = 0.15,
-                      min_pop: float | None = None,
-                      bundle: ArtifactBundle | None = None) -> list[dict[str, Any]]:
+def recommend_similar(
+    title: str,
+    top_k: int = 10,
+    w_lsa: float = 0.55,
+    w_text: float = 0.30,
+    w_pop: float = 0.15,
+    min_pop: float | None = None,
+    bundle: ArtifactBundle | None = None,
+) -> list[dict[str, Any]]:
     """Return top_k games most similar to `title`.
 
     Hybrid score = w_lsa * SVD_cos + w_text * TF-IDF_cos + w_pop * popularity.
@@ -150,16 +159,20 @@ def recommend_similar(title: str, top_k: int = 10,
     ]
 
 
-def recommend_for_user(liked_genres: list[str] | None = None,
-                       liked_tags: list[str] | None = None,
-                       platforms: list[str] | None = None,
-                       top_k: int = 10,
-                       w_lsa: float = 0.30, w_text: float = 0.30, w_pop: float = 0.40,
-                       min_pop_quantile: float = 0.40,
-                       min_rating: float = 0.0,
-                       discount_below_floor: float = 0.3,
-                       use_content_richness: bool = True,
-                       bundle: ArtifactBundle | None = None) -> list[dict[str, Any]]:
+def recommend_for_user(
+    liked_genres: list[str] | None = None,
+    liked_tags: list[str] | None = None,
+    platforms: list[str] | None = None,
+    top_k: int = 10,
+    w_lsa: float = 0.30,
+    w_text: float = 0.30,
+    w_pop: float = 0.40,
+    min_pop_quantile: float = 0.40,
+    min_rating: float = 0.0,
+    discount_below_floor: float = 0.3,
+    use_content_richness: bool = True,
+    bundle: ArtifactBundle | None = None,
+) -> list[dict[str, Any]]:
     """Recommend games matching a user's stated preferences (cold-start)."""
     bundle = bundle or get_bundle()
     if not bundle.is_minimal_ready:

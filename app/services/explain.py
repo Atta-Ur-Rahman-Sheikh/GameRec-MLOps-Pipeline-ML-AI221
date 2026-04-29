@@ -14,9 +14,12 @@ from app.core.artifacts import ArtifactBundle, get_bundle
 from app.services.recommender import find_game_index
 
 
-def explain_match(anchor: str | int, recommended: str | int,
-                  top_k_tokens: int = 6,
-                  bundle: ArtifactBundle | None = None) -> dict[str, Any]:
+def explain_match(
+    anchor: str | int,
+    recommended: str | int,
+    top_k_tokens: int = 6,
+    bundle: ArtifactBundle | None = None,
+) -> dict[str, Any]:
     """Return a dict explaining why `recommended` was matched to `anchor`."""
     bundle = bundle or get_bundle()
     if not bundle.is_minimal_ready:
@@ -44,9 +47,7 @@ def explain_match(anchor: str | int, recommended: str | int,
     contrib = a_vec * r_vec
     top_token_idx = np.argsort(-contrib)[:top_k_tokens]
     top_tokens = [
-        (str(bundle.feature_names[i]), float(contrib[i]))
-        for i in top_token_idx
-        if contrib[i] > 0
+        (str(bundle.feature_names[i]), float(contrib[i])) for i in top_token_idx if contrib[i] > 0
     ]
 
     sim_lsa = float(bundle.lsa_norm[a_idx] @ bundle.lsa_norm[r_idx])

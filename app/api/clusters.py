@@ -22,7 +22,7 @@ def get_clusters():
     for c in cards:
         dt = c.get("distinctive_tags", [])
         if dt and isinstance(dt[0], (list, tuple)):
-            dt = [{"tag": t, "lift": float(l), "count": int(n)} for t, l, n in dt]
+            dt = [{"tag": t, "lift": float(lift), "count": int(n)} for t, lift, n in dt]
         out.append({**c, "distinctive_tags": dt})
     return out
 

@@ -11,8 +11,9 @@ class SimilarRequest(BaseModel):
     w_lsa: float = Field(0.55, ge=0.0, le=1.0)
     w_text: float = Field(0.30, ge=0.0, le=1.0)
     w_pop: float = Field(0.15, ge=0.0, le=1.0)
-    min_pop: float | None = Field(None, ge=0.0, le=1.0,
-                                   description="Optional popularity floor (quantile).")
+    min_pop: float | None = Field(
+        None, ge=0.0, le=1.0, description="Optional popularity floor (quantile)."
+    )
 
 
 class UserRequest(BaseModel):

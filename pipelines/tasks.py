@@ -63,10 +63,13 @@ def validate_sources_and_environment() -> dict[str, Any]:
 @task(name="verify-artifacts", retries=0)
 def verify_ml_artifacts(artifacts_dir: str | Path | None = None) -> dict[str, Any]:
     """Ensure core + optional artifact files exist and JSON parses."""
-    root = Path(artifacts_dir or os.environ.get(
-        "GAMEREC_ARTIFACTS_DIR",
-        PROJECT_ROOT / "artifacts" / "recommender",
-    )).resolve()
+    root = Path(
+        artifacts_dir
+        or os.environ.get(
+            "GAMEREC_ARTIFACTS_DIR",
+            PROJECT_ROOT / "artifacts" / "recommender",
+        )
+    ).resolve()
 
     missing_required: list[str] = []
     missing_optional: list[str] = []

@@ -25,8 +25,7 @@ def to_tokens(items: list[str] | None) -> list[str]:
     return out
 
 
-def build_query_text(liked_genres: list[str] | None,
-                     liked_tags: list[str] | None) -> str:
+def build_query_text(liked_genres: list[str] | None, liked_tags: list[str] | None) -> str:
     """Same field-weighting scheme used to build catalog text blobs."""
     g = to_tokens(liked_genres or [])
     t = to_tokens(liked_tags or [])

@@ -32,14 +32,25 @@ from sklearn.preprocessing import normalize
 from xgboost import XGBRegressor
 
 from app.core.config import settings
-from app.services._text import build_query_text, to_tokens
+from app.services._text import to_tokens
 
 # A few hand-picked titles we want present so tests can reference them by name.
 FAMOUS_TITLES = [
-    "Hollow Knight", "Hades", "Stardew Valley", "Dark Souls III",
-    "Counter-Strike", "Half-Life 2", "Portal 2", "Terraria",
-    "Celeste", "The Witcher 3: Wild Hunt", "Elden Ring", "Cuphead",
-    "Among Us", "Minecraft", "Disco Elysium",
+    "Hollow Knight",
+    "Hades",
+    "Stardew Valley",
+    "Dark Souls III",
+    "Counter-Strike",
+    "Half-Life 2",
+    "Portal 2",
+    "Terraria",
+    "Celeste",
+    "The Witcher 3: Wild Hunt",
+    "Elden Ring",
+    "Cuphead",
+    "Among Us",
+    "Minecraft",
+    "Disco Elysium",
 ]
 
 OUT_DIR = Path(__file__).resolve().parent / "artifacts"
@@ -50,6 +61,7 @@ TFIDF_MAX_FEATURES = 4000
 
 # ---------------------------------------------------------------- helpers
 
+
 def _player_types_rules_default() -> dict:
     return {
         "Explorer": {"tags": ["Open World", "Exploration", "Sandbox", "Adventure"]},
@@ -57,10 +69,14 @@ def _player_types_rules_default() -> dict:
         "Tinkerer": {"tags": ["Crafting", "Building", "Sandbox"], "genres": ["Simulation"]},
         "Trophy Hunter": {"all_categories": ["Steam Achievements", "Steam Trading Cards"]},
         "Thrill-Seeker": {"tags": ["Horror", "Survival Horror", "Gore", "FPS"]},
-        "Grinder": {"tags": ["MMORPG", "Loot", "Procedural Generation"],
-                    "compound_rpg": ["Loot", "Procedural Generation", "Open World"]},
-        "Speedrunner": {"tags": ["Precision Platformer", "Time Attack"],
-                        "compound_difficult": ["Platformer", "Arcade"]},
+        "Grinder": {
+            "tags": ["MMORPG", "Loot", "Procedural Generation"],
+            "compound_rpg": ["Loot", "Procedural Generation", "Open World"],
+        },
+        "Speedrunner": {
+            "tags": ["Precision Platformer", "Time Attack"],
+            "compound_difficult": ["Platformer", "Arcade"],
+        },
         "Competitor": {"tags": ["Online PvP", "Competitive", "PvP", "MOBA", "Fighting"]},
     }
 
@@ -79,7 +95,11 @@ def _row_to_label(row, ptype: str, rules: dict) -> int:
         return 1
     if ptype == "Grinder" and "RPG" in genre_set and tag_set & set(rule.get("compound_rpg", [])):
         return 1
-    if ptype == "Speedrunner" and "Difficult" in tag_set and tag_set & set(rule.get("compound_difficult", [])):
+    if (
+        ptype == "Speedrunner"
+        and "Difficult" in tag_set
+        and tag_set & set(rule.get("compound_difficult", []))
+    ):
         return 1
     return 0
 
@@ -100,16 +120,27 @@ def _synthetic_catalog() -> pd.DataFrame:
             "key": "".join(ch for ch in title.lower() if ch.isalnum()),
             "released_rawg": f"{2015 + (i % 10)}-{(i % 12) + 1:02d}-15",
             "released_steam": f"{2015 + (i % 10)}-{(i % 12) + 1:02d}-15",
-            "genres": (["RPG", "Indie"] if i % 5 == 0 else
-                       ["Action", "Adventure"] if i % 3 == 0 else
-                       ["Simulation", "Strategy"] if i % 2 == 0 else
-                       ["Shooter", "Action"]),
-            "tags": (["Story Rich", "Open World", "Singleplayer"] if i % 5 == 0 else
-                     ["Roguelike", "Difficult", "Indie"] if i % 3 == 0 else
-                     ["Multiplayer", "Online PvP", "Competitive"] if i % 2 == 0 else
-                     ["Horror", "Survival Horror", "Atmospheric"]),
-            "categories": (["Steam Achievements", "Steam Trading Cards"]
-                           if i % 2 == 0 else ["Single-player"]),
+            "genres": (
+                ["RPG", "Indie"]
+                if i % 5 == 0
+                else ["Action", "Adventure"]
+                if i % 3 == 0
+                else ["Simulation", "Strategy"]
+                if i % 2 == 0
+                else ["Shooter", "Action"]
+            ),
+            "tags": (
+                ["Story Rich", "Open World", "Singleplayer"]
+                if i % 5 == 0
+                else ["Roguelike", "Difficult", "Indie"]
+                if i % 3 == 0
+                else ["Multiplayer", "Online PvP", "Competitive"]
+                if i % 2 == 0
+                else ["Horror", "Survival Horror", "Atmospheric"]
+            ),
+            "categories": (
+                ["Steam Achievements", "Steam Trading Cards"] if i % 2 == 0 else ["Single-player"]
+            ),
             "platforms": ["PC", "Windows"],
             "description": f"{title} synthetic fixture description for CI tests.",
             "popularity": float(3.4 + (i % 10) * 0.12),
@@ -118,20 +149,23 @@ def _synthetic_catalog() -> pd.DataFrame:
         for i, title in enumerate(FAMOUS_TITLES)
     ]
     for i in range(30):
-        rows.append({
-            "name": f"Fixture Game {i}",
-            "key": f"fixturegame{i}",
-            "released_rawg": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
-            "released_steam": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
-            "genres": ["Indie", "Adventure"] if i % 2 else ["Action", "RPG"],
-            "tags": ["Indie", "Singleplayer", "Story Rich"] if i % 2 else
-                    ["Multiplayer", "PvP", "Competitive"],
-            "categories": ["Steam Achievements"],
-            "platforms": ["PC", "Windows"],
-            "description": "Additional synthetic fixture row.",
-            "popularity": float(3.0 + (i % 12) * 0.1),
-            "rating": float(3.0 + (i % 12) * 0.11),
-        })
+        rows.append(
+            {
+                "name": f"Fixture Game {i}",
+                "key": f"fixturegame{i}",
+                "released_rawg": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
+                "released_steam": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
+                "genres": ["Indie", "Adventure"] if i % 2 else ["Action", "RPG"],
+                "tags": ["Indie", "Singleplayer", "Story Rich"]
+                if i % 2
+                else ["Multiplayer", "PvP", "Competitive"],
+                "categories": ["Steam Achievements"],
+                "platforms": ["PC", "Windows"],
+                "description": "Additional synthetic fixture row.",
+                "popularity": float(3.0 + (i % 12) * 0.1),
+                "rating": float(3.0 + (i % 12) * 0.11),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -143,16 +177,27 @@ def _synthetic_catalog() -> pd.DataFrame:
             "key": "".join(ch for ch in title.lower() if ch.isalnum()),
             "released_rawg": f"{2015 + (i % 10)}-{(i % 12) + 1:02d}-15",
             "released_steam": f"{2015 + (i % 10)}-{(i % 12) + 1:02d}-15",
-            "genres": (["RPG", "Indie"] if i % 5 == 0 else
-                       ["Action", "Adventure"] if i % 3 == 0 else
-                       ["Simulation", "Strategy"] if i % 2 == 0 else
-                       ["Shooter", "Action"]),
-            "tags": (["Story Rich", "Open World", "Singleplayer"] if i % 5 == 0 else
-                     ["Roguelike", "Difficult", "Indie"] if i % 3 == 0 else
-                     ["Multiplayer", "Online PvP", "Competitive"] if i % 2 == 0 else
-                     ["Horror", "Survival Horror", "Atmospheric"]),
-            "categories": (["Steam Achievements", "Steam Trading Cards"]
-                           if i % 2 == 0 else ["Single-player"]),
+            "genres": (
+                ["RPG", "Indie"]
+                if i % 5 == 0
+                else ["Action", "Adventure"]
+                if i % 3 == 0
+                else ["Simulation", "Strategy"]
+                if i % 2 == 0
+                else ["Shooter", "Action"]
+            ),
+            "tags": (
+                ["Story Rich", "Open World", "Singleplayer"]
+                if i % 5 == 0
+                else ["Roguelike", "Difficult", "Indie"]
+                if i % 3 == 0
+                else ["Multiplayer", "Online PvP", "Competitive"]
+                if i % 2 == 0
+                else ["Horror", "Survival Horror", "Atmospheric"]
+            ),
+            "categories": (
+                ["Steam Achievements", "Steam Trading Cards"] if i % 2 == 0 else ["Single-player"]
+            ),
             "platforms": ["PC", "Windows"],
             "description": f"{title} synthetic fixture description for CI tests.",
             "popularity": float(3.4 + (i % 10) * 0.12),
@@ -162,24 +207,28 @@ def _synthetic_catalog() -> pd.DataFrame:
     ]
     # Add a few extra rows so clustering/classification have enough variety.
     for i in range(30):
-        rows.append({
-            "name": f"Fixture Game {i}",
-            "key": f"fixturegame{i}",
-            "released_rawg": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
-            "released_steam": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
-            "genres": ["Indie", "Adventure"] if i % 2 else ["Action", "RPG"],
-            "tags": ["Indie", "Singleplayer", "Story Rich"] if i % 2 else
-                    ["Multiplayer", "PvP", "Competitive"],
-            "categories": ["Steam Achievements"],
-            "platforms": ["PC", "Windows"],
-            "description": "Additional synthetic fixture row.",
-            "popularity": float(3.0 + (i % 12) * 0.1),
-            "rating": float(3.0 + (i % 12) * 0.11),
-        })
+        rows.append(
+            {
+                "name": f"Fixture Game {i}",
+                "key": f"fixturegame{i}",
+                "released_rawg": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
+                "released_steam": f"{2014 + (i % 11)}-{(i % 12) + 1:02d}-10",
+                "genres": ["Indie", "Adventure"] if i % 2 else ["Action", "RPG"],
+                "tags": ["Indie", "Singleplayer", "Story Rich"]
+                if i % 2
+                else ["Multiplayer", "PvP", "Competitive"],
+                "categories": ["Steam Achievements"],
+                "platforms": ["PC", "Windows"],
+                "description": "Additional synthetic fixture row.",
+                "popularity": float(3.0 + (i % 12) * 0.1),
+                "rating": float(3.0 + (i % 12) * 0.11),
+            }
+        )
     return pd.DataFrame(rows)
 
 
 # ---------------------------------------------------------------- pipeline
+
 
 def main():
     src = settings.artifacts_dir
@@ -191,8 +240,11 @@ def main():
     if not catalog_path.exists():
         catalog_path = src / "catalog.pkl"
     try:
-        catalog = (pd.read_parquet(catalog_path) if catalog_path.suffix == ".parquet"
-                   else pd.read_pickle(catalog_path))
+        catalog = (
+            pd.read_parquet(catalog_path)
+            if catalog_path.suffix == ".parquet"
+            else pd.read_pickle(catalog_path)
+        )
         print(f"  full catalog: {len(catalog):,} games")
     except Exception as exc:  # noqa: BLE001
         print(f"  failed to read real catalog ({type(exc).__name__}); using synthetic fallback")
@@ -204,15 +256,19 @@ def main():
     for title in FAMOUS_TITLES:
         hits = catalog.index[catalog["name"].str.lower() == title.lower()]
         if not len(hits):
-            hits = catalog.index[catalog["name"].str.lower().str.contains(title.lower(), regex=False)]
+            hits = catalog.index[
+                catalog["name"].str.lower().str.contains(title.lower(), regex=False)
+            ]
         if len(hits):
             famous_idx.append(int(hits[0]))
 
     pop_top = catalog.nlargest(N_TARGET, "popularity").index.tolist()
     keep = sorted(set(pop_top) | set(famous_idx))
     sub = catalog.loc[keep].reset_index(drop=True).copy()
-    print(f"  fixture subset: {len(sub)} games "
-          f"({len(famous_idx)} famous + top-{len(pop_top)} popular)")
+    print(
+        f"  fixture subset: {len(sub)} games "
+        f"({len(famous_idx)} famous + top-{len(pop_top)} popular)"
+    )
 
     # Re-fit a tiny TF-IDF + SVD on the subset.
     sub["text_blob"] = sub.apply(_build_text_blob, axis=1)
@@ -232,7 +288,9 @@ def main():
     print(f"  lsa: {lsa_norm.shape}")
 
     pop_raw = sub["popularity"].to_numpy(dtype=np.float32)
-    pop_norm = ((pop_raw - pop_raw.min()) / (pop_raw.max() - pop_raw.min() + 1e-9)).astype(np.float32)
+    pop_norm = ((pop_raw - pop_raw.min()) / (pop_raw.max() - pop_raw.min() + 1e-9)).astype(
+        np.float32
+    )
 
     # Player-type weak labels + tiny OvR LR.
     rules = _player_types_rules_default()
@@ -245,7 +303,7 @@ def main():
     # (otherwise LogisticRegression can't fit). Drop dead labels and
     # synthesise one positive for any nearly-empty label.
     keep_labels = []
-    for j, ptype in enumerate(label_names):
+    for j, _ptype in enumerate(label_names):
         n_pos = int(y_weak[:, j].sum())
         if 0 < n_pos < len(sub):
             keep_labels.append(j)
@@ -271,29 +329,36 @@ def main():
         s = set(items)
         return np.array([bool(set(v) & s) for v in values], dtype=np.int8)
 
-    extras = np.column_stack([
-        sub["tags"].apply(len),
-        sub["genres"].apply(len),
-        sub["categories"].apply(len),
-        sub["platforms"].apply(len),
-        sub["description"].fillna("").str.len() / 1000.0,
-        _has_any(sub["tags"], ["Multiplayer", "Online PvP", "PvP", "Online Co-Op"]),
-        _has_any(sub["tags"], ["Singleplayer"]),
-        _has_any(sub["genres"], ["Indie"]),
-        _has_any(sub["categories"], ["Steam Achievements"]),
-        _has_any(sub["categories"], ["Steam Trading Cards"]),
-        _has_any(sub["tags"], ["Early Access"]),
-        _has_any(sub["tags"], ["VR"]),
-    ]).astype(np.float32)
+    extras = np.column_stack(
+        [
+            sub["tags"].apply(len),
+            sub["genres"].apply(len),
+            sub["categories"].apply(len),
+            sub["platforms"].apply(len),
+            sub["description"].fillna("").str.len() / 1000.0,
+            _has_any(sub["tags"], ["Multiplayer", "Online PvP", "PvP", "Online Co-Op"]),
+            _has_any(sub["tags"], ["Singleplayer"]),
+            _has_any(sub["genres"], ["Indie"]),
+            _has_any(sub["categories"], ["Steam Achievements"]),
+            _has_any(sub["categories"], ["Steam Trading Cards"]),
+            _has_any(sub["tags"], ["Early Access"]),
+            _has_any(sub["tags"], ["VR"]),
+        ]
+    ).astype(np.float32)
 
     X_reg = np.hstack([lsa_norm, year_feat, extras]).astype(np.float32)
     y_reg = pop_raw
 
     xgb = XGBRegressor(
-        n_estimators=200, learning_rate=0.05, max_depth=4,
-        subsample=0.85, colsample_bytree=0.85,
-        objective="reg:squarederror", tree_method="hist",
-        random_state=42, n_jobs=1,
+        n_estimators=200,
+        learning_rate=0.05,
+        max_depth=4,
+        subsample=0.85,
+        colsample_bytree=0.85,
+        objective="reg:squarederror",
+        tree_method="hist",
+        random_state=42,
+        n_jobs=1,
     )
     xgb.fit(X_reg, y_reg)
     print(f"  popularity regressor fit on {X_reg.shape[1]} features")
@@ -315,17 +380,17 @@ def main():
                 tag_counts[t] = tag_counts.get(t, 0) + 1
         top_tags = sorted(tag_counts.items(), key=lambda kv: -kv[1])[:5]
         auto_name = " / ".join(t for t, _ in top_tags[:2]) or f"cluster_{cid}"
-        cluster_cards.append({
-            "cluster_id": int(cid),
-            "auto_name": auto_name,
-            "size": int(cmask.sum()),
-            "avg_popularity": round(float(cgames["popularity"].mean()), 3),
-            "top_genres": [],
-            "distinctive_tags": [
-                {"tag": t, "lift": 1.0, "count": int(c)} for t, c in top_tags
-            ],
-            "examples": cgames.nlargest(3, "popularity")["name"].tolist(),
-        })
+        cluster_cards.append(
+            {
+                "cluster_id": int(cid),
+                "auto_name": auto_name,
+                "size": int(cmask.sum()),
+                "avg_popularity": round(float(cgames["popularity"].mean()), 3),
+                "top_genres": [],
+                "distinctive_tags": [{"tag": t, "lift": 1.0, "count": int(c)} for t, c in top_tags],
+                "examples": cgames.nlargest(3, "popularity")["name"].tolist(),
+            }
+        )
     cluster_names = {c["cluster_id"]: c["auto_name"] for c in cluster_cards}
 
     # Seasonality: real grids over the subset (small but consistent shape).
@@ -341,8 +406,13 @@ def main():
 
     def _theme_block(filter_fn) -> dict:
         df = sub_dated[sub_dated.apply(filter_fn, axis=1)]
-        monthly = (df.groupby("release_month").size()
-                   .reindex(range(1, 13), fill_value=0).to_numpy().astype(float))
+        monthly = (
+            df.groupby("release_month")
+            .size()
+            .reindex(range(1, 13), fill_value=0)
+            .to_numpy()
+            .astype(float)
+        )
         avg = monthly  # already monthly counts in window
         idx = (avg / avg.mean()) if avg.mean() > 0 else np.ones(12)
         return {
@@ -379,31 +449,49 @@ def main():
     joblib.dump(svd, OUT_DIR / "svd.joblib", compress=3)
     np.save(OUT_DIR / "lsa_matrix.npy", lsa_norm)
     np.save(OUT_DIR / "popularity.npy", pop_norm)
-    joblib.dump({"clf": player_clf, "labels": label_names},
-                OUT_DIR / "player_type_classifier.joblib", compress=3)
-    (OUT_DIR / "player_types_rules.json").write_text(
-        json.dumps(rules, indent=2), encoding="utf-8")
+    joblib.dump(
+        {"clf": player_clf, "labels": label_names},
+        OUT_DIR / "player_type_classifier.joblib",
+        compress=3,
+    )
+    (OUT_DIR / "player_types_rules.json").write_text(json.dumps(rules, indent=2), encoding="utf-8")
 
-    joblib.dump({
-        "model": xgb,
-        "model_name": "XGBoost",
-        "n_lsa": N_LATENT_FIXTURE,
-        "year_centre": 2010.0,
-        "year_scale": 10.0,
-        "median_year": median_year,
-        "extra_feature_names": [
-            "n_tags", "n_genres", "n_categories", "n_platforms", "desc_length",
-            "has_multiplayer", "has_singleplayer", "is_indie",
-            "has_achievements", "has_trading_cards", "has_early_access", "has_vr",
-        ],
-    }, OUT_DIR / "popularity_regressor.joblib", compress=3)
+    joblib.dump(
+        {
+            "model": xgb,
+            "model_name": "XGBoost",
+            "n_lsa": N_LATENT_FIXTURE,
+            "year_centre": 2010.0,
+            "year_scale": 10.0,
+            "median_year": median_year,
+            "extra_feature_names": [
+                "n_tags",
+                "n_genres",
+                "n_categories",
+                "n_platforms",
+                "desc_length",
+                "has_multiplayer",
+                "has_singleplayer",
+                "is_indie",
+                "has_achievements",
+                "has_trading_cards",
+                "has_early_access",
+                "has_vr",
+            ],
+        },
+        OUT_DIR / "popularity_regressor.joblib",
+        compress=3,
+    )
 
-    joblib.dump({"model": kmeans, "k": best_k, "names": cluster_names},
-                OUT_DIR / "kmeans_clusters.joblib", compress=3)
+    joblib.dump(
+        {"model": kmeans, "k": best_k, "names": cluster_names},
+        OUT_DIR / "kmeans_clusters.joblib",
+        compress=3,
+    )
     (OUT_DIR / "cluster_cards.json").write_text(
-        json.dumps(cluster_cards, indent=2), encoding="utf-8")
-    (OUT_DIR / "seasonality.json").write_text(
-        json.dumps(seasonality, indent=2), encoding="utf-8")
+        json.dumps(cluster_cards, indent=2), encoding="utf-8"
+    )
+    (OUT_DIR / "seasonality.json").write_text(json.dumps(seasonality, indent=2), encoding="utf-8")
 
     total = sum(p.stat().st_size for p in OUT_DIR.iterdir())
     print(f"\nWrote {len(list(OUT_DIR.iterdir()))} fixture files to {OUT_DIR}")

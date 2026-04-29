@@ -10,8 +10,7 @@ from typing import Any
 
 from app.core.artifacts import ArtifactBundle, get_bundle
 
-MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
 def list_themes(bundle: ArtifactBundle | None = None) -> list[str]:
@@ -20,8 +19,7 @@ def list_themes(bundle: ArtifactBundle | None = None) -> list[str]:
     return sorted((season.get("themes") or {}).keys())
 
 
-def get_seasonality(theme: str,
-                    bundle: ArtifactBundle | None = None) -> dict[str, Any]:
+def get_seasonality(theme: str, bundle: ArtifactBundle | None = None) -> dict[str, Any]:
     """Return the monthly index + headline stats for a theme."""
     bundle = bundle or get_bundle()
     season = bundle.seasonality or {}

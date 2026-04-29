@@ -24,8 +24,7 @@ from app.core.artifacts import get_bundle, load_bundle
 from app.core.config import settings
 from app.schemas.responses import HealthResponse
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)-7s %(name)s | %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(name)s | %(message)s")
 log = logging.getLogger("gamerec.api")
 
 
@@ -33,9 +32,11 @@ log = logging.getLogger("gamerec.api")
 async def lifespan(app: FastAPI):  # noqa: ARG001
     log.info("loading artifacts on startup ...")
     bundle = load_bundle()
-    log.info("ready: catalog=%s, missing=%s",
-             None if bundle.catalog is None else len(bundle.catalog),
-             bundle.missing or "[none]")
+    log.info(
+        "ready: catalog=%s, missing=%s",
+        None if bundle.catalog is None else len(bundle.catalog),
+        bundle.missing or "[none]",
+    )
     yield
 
 

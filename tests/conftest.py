@@ -37,9 +37,11 @@ def bundle():
     """Loaded artifact bundle, shared across the test session."""
     # Import lazily so the env-var override is in place first.
     from app.core import artifacts as art
+
     art.reset_bundle()
     # Re-create settings so the new env var is picked up.
     from app.core.config import Settings
+
     return art.load_bundle(cfg=Settings.from_env(), force=True)
 
 
@@ -49,6 +51,7 @@ def client(bundle):  # noqa: ARG001 -- ensures bundle loads first
     from fastapi.testclient import TestClient
 
     from app.main import app
+
     with TestClient(app) as c:
         yield c
 
@@ -56,12 +59,18 @@ def client(bundle):  # noqa: ARG001 -- ensures bundle loads first
 def known_game(bundle) -> str:
     """Pick a game that's guaranteed to be in whatever catalog we loaded."""
     candidates = [
-        "Hollow Knight", "Hades", "Stardew Valley",
-        "Dark Souls III", "Counter-Strike", "Half-Life 2",
-        "Portal 2", "Terraria",
+        "Hollow Knight",
+        "Hades",
+        "Stardew Valley",
+        "Dark Souls III",
+        "Counter-Strike",
+        "Half-Life 2",
+        "Portal 2",
+        "Terraria",
     ]
     for c in candidates:
         from app.services.recommender import find_game_index
+
         if find_game_index(c, bundle) is not None:
             return c
     # Fall back to the most popular game in whatever catalog loaded.
