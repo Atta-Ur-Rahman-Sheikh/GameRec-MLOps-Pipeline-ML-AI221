@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Send Discord message for push
         env:
-          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1499826267464269996/FEwE6Zn2JLcaI3yqCtKFFLDyRfPlYEBmhyxi5ZeUNFXjRMbitT9QIQt9IUNbvJjzzn6U"
+          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1499835172823105638/jSpwjm1ltMxmBjKQ4Djs9qzoSJS4f9lobOvGoCoHx4hITftY6wIXthmIAXoDPTd4JFW8"
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           ACTOR: ${{ github.actor }}
