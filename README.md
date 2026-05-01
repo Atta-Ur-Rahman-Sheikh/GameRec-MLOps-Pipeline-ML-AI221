@@ -8,6 +8,7 @@ Actions CI.
 |-----------|----------------|
 | **Notebook** | `Game_Recommender_Simple.ipynb` — trains everything, writes `artifacts/recommender/`. |
 | **API** | `app/` — FastAPI service loading artifacts at startup. |
+| **Frontend** | `frontend/` — RAWG-inspired React app for discovery, search, detail, and recommendations. |
 | **Pipeline** | `pipelines/` — Prefect 3 flow validating datasets + artifact bundle. |
 | **Tests** | `tests/` — pytest + `TestClient`; CI uses **tiny fixtures** under `tests/fixtures/artifacts/`. |
 | **Docker** | `docker/Dockerfile` — slim Python 3.12 image; **mount** real artifacts at runtime. |
@@ -26,6 +27,34 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for Swagger UI.
+
+## Frontend (React + Vite)
+
+The frontend is designed as a cinematic, recommendation-first UI inspired by RAWG-style browsing patterns.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173).
+
+Set API base URL if needed:
+
+```bash
+# frontend/.env.local
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Frontend features:
+
+- Discover page with hero search + trend clusters
+- Search/browse with loading skeletons and responsive game cards
+- Game detail page with recommendation rail + explainability panel
+- Player archetype badges/icons (`/predict/player-type/by-title`)
+- Preference-based recommendations (`/recommend/user`)
+- Dataset-backed metadata usage (genres/platforms/rating/popularity) with deterministic image fallbacks
 
 ### Troubleshooting installs (Windows)
 

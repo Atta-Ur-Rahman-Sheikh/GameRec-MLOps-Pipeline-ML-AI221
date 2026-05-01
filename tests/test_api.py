@@ -87,6 +87,16 @@ def test_discover_clusters(client):
     assert isinstance(cards, list)
 
 
+def test_discover_cluster_map(client):
+    r = client.get("/discover/cluster-map")
+    assert r.status_code == 200
+    body = r.json()
+    assert "points" in body and isinstance(body["points"], list)
+    assert "centroids" in body and isinstance(body["centroids"], list)
+    assert "explained_variance_ratio" in body
+    assert len(body["explained_variance_ratio"]) == 2
+
+
 def test_discover_hidden_genre(client, famous_game):
     path = f"/discover/hidden-genre/{quote(famous_game)}"
     r = client.get(path)

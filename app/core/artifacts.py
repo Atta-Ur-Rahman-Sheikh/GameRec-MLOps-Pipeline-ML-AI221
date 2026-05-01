@@ -24,6 +24,7 @@ import scipy.sparse as sp
 from app.core.config import Settings, settings
 
 log = logging.getLogger("gamerec.artifacts")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass
@@ -108,6 +109,67 @@ def _load_catalog(path: Path) -> pd.DataFrame:
     return pd.read_pickle(path)
 
 
+def _enrich_catalog_from_rawg(catalog: pd.DataFrame, project_root: Path) -> pd.DataFrame:
+    """Attach RAWG cover+metadata columns if they are missing in saved catalog."""
+    needed_cols = {"background_image", "rawg_slug", "released_rawg", "metacritic"}
+    if needed_cols.issubset(set(catalog.columns)):
+        return catalog
+
+    rawg_path = project_root / "datasets" / "RAWG Dataset" / "jsonl" / "rawg_data.jsonl"
+    if not rawg_path.exists():
+        return catalog
+
+    by_key: dict[str, dict[str, Any]] = {}
+    with rawg_path.open(encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            name = str(row.get("name", "")).strip().lower()
+            if not name:
+                continue
+            by_key[name] = {
+                "background_image": row.get("background_image"),
+                "rawg_slug": row.get("slug"),
+                "released_rawg": row.get("released"),
+                "metacritic": row.get("metacritic"),
+            }
+
+    if not by_key:
+        return catalog
+
+    out = catalog.copy()
+    key_series = out["name"].astype(str).str.strip().str.lower()
+    rawg_meta = key_series.map(by_key)
+
+    def pick(col: str):
+        return rawg_meta.map(lambda m: m.get(col) if isinstance(m, dict) else None)
+
+    if "background_image" not in out.columns:
+        out["background_image"] = pick("background_image")
+    else:
+        out["background_image"] = out["background_image"].where(
+            out["background_image"].notna(), pick("background_image")
+        )
+
+    if "rawg_slug" not in out.columns:
+        out["rawg_slug"] = pick("rawg_slug")
+    else:
+        out["rawg_slug"] = out["rawg_slug"].where(out["rawg_slug"].notna(), pick("rawg_slug"))
+
+    if "released_rawg" not in out.columns:
+        out["released_rawg"] = pick("released_rawg")
+
+    if "metacritic" not in out.columns:
+        out["metacritic"] = pick("metacritic")
+
+    return out
+
+
 def _build_tag_idf(catalog: pd.DataFrame) -> dict[str, float]:
     tag_doc_freq: dict[str, int] = {}
     for tags_list in catalog["tags"].values:
@@ -159,6 +221,8 @@ def load_bundle(cfg: Settings | None = None, force: bool = False) -> ArtifactBun
         if bundle.catalog is None:
             bundle.missing.append("catalog")
             log.warning("artifact missing: catalog -> expected at %s/catalog.{parquet,pkl}", adir)
+        else:
+            bundle.catalog = _enrich_catalog_from_rawg(bundle.catalog, PROJECT_ROOT)
 
         bundle.vectorizer = _load_or_warn(
             joblib.load, adir / "tfidf_vectorizer.joblib", bundle.missing, "tfidf_vectorizer"

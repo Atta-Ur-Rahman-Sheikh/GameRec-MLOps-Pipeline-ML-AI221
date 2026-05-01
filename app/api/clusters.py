@@ -2,13 +2,32 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.responses import ClusterCard, HiddenGenreResponse
-from app.services.clusters import discover_hidden_genre, list_clusters
+from app.schemas.responses import ClusterCard, ClusterMapResponse, HiddenGenreResponse
+from app.services.clusters import build_cluster_map, discover_hidden_genre, list_clusters
 
 router = APIRouter(prefix="/discover", tags=["clusters"])
 
+log = logging.getLogger("gamerec.api.clusters")
+
+
+@router.get("/cluster-map", response_model=ClusterMapResponse)
+def get_cluster_map():
+    """Two-dimensional PCA of LSA vectors; points tinted by cluster for Explore."""
+    try:
+        payload = build_cluster_map()
+        return ClusterMapResponse.model_validate(payload)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001 — return a safe message to the client
+        log.exception("cluster map failed unexpectedly")
+        raise HTTPException(
+            status_code=500,
+            detail=f"{type(exc).__name__}: {exc}",
+        ) from exc
 
 @router.get("/clusters", response_model=list[ClusterCard])
 def get_clusters():
