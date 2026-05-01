@@ -9,9 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord message for push
-        if: ${{ secrets.DISCORD_WEBHOOK_URL != '' }}
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1499826267464269996/FEwE6Zn2JLcaI3yqCtKFFLDyRfPlYEBmhyxi5ZeUNFXjRMbitT9QIQt9IUNbvJjzzn6U"
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           ACTOR: ${{ github.actor }}
