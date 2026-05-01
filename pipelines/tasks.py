@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from urllib import request
 from typing import Any
 
 from prefect import task
@@ -114,3 +115,23 @@ def print_summary(source_info: dict[str, Any], artifact_report: dict[str, Any]) 
         print("Optional not yet built:", ", ".join(artifact_report["missing_optional"]))
     print(f"FastAPI minimal ready: {artifact_report['ready_for_fastapi']}")
     print("=================================\n")
+
+
+@task(name="discord-notification", retries=0)
+def send_discord_notification(message: str) -> bool:
+    """Send flow status message to Discord via webhook URL."""
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if not webhook_url:
+        print("Discord notification skipped: DISCORD_WEBHOOK_URL is not configured.")
+        return False
+
+    payload = json.dumps({"content": message}).encode("utf-8")
+    req = request.Request(
+        webhook_url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with request.urlopen(req, timeout=20):  # noqa: S310 - trusted env webhook URL
+        pass
+    return True
