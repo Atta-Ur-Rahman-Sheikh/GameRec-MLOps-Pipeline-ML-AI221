@@ -91,7 +91,11 @@ def build_cluster_map(
     kmeans = bundle.kmeans
 
     if "cluster_id" in catalog.columns:
-        cid_raw = pd.to_numeric(catalog["cluster_id"], errors="coerce").fillna(-1).to_numpy(dtype=np.int64)
+        cid_raw = (
+            pd.to_numeric(catalog["cluster_id"], errors="coerce")
+            .fillna(-1)
+            .to_numpy(dtype=np.int64)
+        )
         valid_mask = cid_raw >= 0
     else:
         cid_raw = np.full(len(catalog), -1, dtype=np.int64)

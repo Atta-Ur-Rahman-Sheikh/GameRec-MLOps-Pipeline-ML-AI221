@@ -29,6 +29,7 @@ def get_cluster_map():
             detail=f"{type(exc).__name__}: {exc}",
         ) from exc
 
+
 @router.get("/clusters", response_model=list[ClusterCard])
 def get_clusters():
     """Return all hidden-genre cluster cards (auto-name + distinctive tags + examples)."""

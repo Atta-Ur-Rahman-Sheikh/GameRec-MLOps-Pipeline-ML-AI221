@@ -217,10 +217,14 @@ def search_games(
     mask = catalog["name"].str.lower().str.contains(q, regex=False, na=False)
     hits = catalog[mask].nlargest(limit, "popularity")
     cols = catalog.columns
-    return [_row_to_game_hit(row, cols, tag_limit=24, category_limit=16) for _, row in hits.iterrows()]
+    return [
+        _row_to_game_hit(row, cols, tag_limit=24, category_limit=16) for _, row in hits.iterrows()
+    ]
 
 
-def discover_rows(limit: int = 12, bundle: ArtifactBundle | None = None) -> dict[str, list[dict[str, Any]]]:
+def discover_rows(
+    limit: int = 12, bundle: ArtifactBundle | None = None
+) -> dict[str, list[dict[str, Any]]]:
     """Return home-page rows tuned for discovery UX."""
     bundle = bundle or get_bundle()
     catalog = bundle.catalog

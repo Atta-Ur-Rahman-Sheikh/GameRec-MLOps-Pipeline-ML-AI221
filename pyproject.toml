@@ -15,6 +15,7 @@ exclude = [
     "test.ipynb",
     "artifacts/",
     "Datasets/",
+    "datasets/",
     "report/",
     ".venv/",
     "build/",
