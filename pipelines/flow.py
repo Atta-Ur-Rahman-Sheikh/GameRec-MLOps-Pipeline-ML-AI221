@@ -50,10 +50,7 @@ def gamerec_artifact_pipeline():
     except Exception as exc:
         try:
             send_discord_notification(
-                message=(
-                    "❌ **GameRec Prefect pipeline failed**\n"
-                    f"- Error: `{exc!r}`"
-                ),
+                message=(f"❌ **GameRec Prefect pipeline failed**\n- Error: `{exc!r}`"),
             )
         except Exception as notify_exc:  # pragma: no cover - best effort only
             print(f"Discord notification failed: {notify_exc!r}")
