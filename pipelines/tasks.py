@@ -16,8 +16,8 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from urllib import request
 from typing import Any
+from urllib import request
 
 from prefect import task
 
