@@ -18,7 +18,7 @@ export function Layout({ children }: PropsWithChildren) {
           <span className="logo-mark" aria-hidden>
             <Gamepad2 size={20} strokeWidth={2.25} />
           </span>
-          <span>GameRec</span>
+          <span>GameMind</span>
         </Link>
         <TopSearchBar />
         <nav className="nav">

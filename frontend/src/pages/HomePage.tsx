@@ -32,7 +32,7 @@ export function HomePage() {
     <div className="page">
       <section className="hero">
         <div>
-          <p className="kicker">GameRec ML Recommender</p>
+          <p className="kicker">GameMind ML Recommender</p>
           <h1>What do you want to play?</h1>
           <p className="hero-copy">
             Describe your vibe in natural language. We translate it into recommendations and explain
