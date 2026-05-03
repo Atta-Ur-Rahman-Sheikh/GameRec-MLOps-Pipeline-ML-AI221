@@ -1,4 +1,4 @@
-# <img src="./report/readme files/game-svgrepo-com (1).svg" width="25%" align="right" />Semantic Game Recommendation System with Production-Grade MLOps Infrastructure
+# <img src="./report/readme files/game-svgrepo-com (1).svg" width="30%" align="right" />Semantic Game Recommendation System with Production-Grade MLOps Infrastructure
 
 [![Python](https://img.shields.io/badge/Python-3.13-422680?style=for-the-badge&labelColor=111827&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-341671?style=for-the-badge&labelColor=111827&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
