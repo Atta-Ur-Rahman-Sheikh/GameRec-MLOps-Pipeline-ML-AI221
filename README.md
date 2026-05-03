@@ -1,197 +1,159 @@
-<div align="center">
+# <img src="./report/readme files/game-svgrepo-com (1).svg" width="25%" align="right" />Semantic Game Recommendation System with Production-Grade MLOps Infrastructure
 
-# GameRec
+[![Python](https://img.shields.io/badge/Python-3.13-422680?style=for-the-badge&labelColor=111827&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-341671?style=for-the-badge&labelColor=111827&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-Vite-280659?style=for-the-badge&labelColor=111827&logo=react&logoColor=white)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Container-660f56?style=for-the-badge&labelColor=111827&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Prefect](https://img.shields.io/badge/Prefect-Orchestration-ae2d68?style=for-the-badge&labelColor=111827&logo=prefect&logoColor=white)](https://www.prefect.io/)
+[![License](https://img.shields.io/badge/License-MIT-f54952?style=for-the-badge&labelColor=111827)](LICENSE)
 
-### Hybrid game recommender · MLOps-ready stack
+*An end-to-end ML pipeline that turns a 79,000-game Steam + RAWG catalog into explainable, production-deployable recommendations, served via a FastAPI REST API, containerized with Docker, and guarded by a full CI/CD pipeline.*
 
-[![Python](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-service-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Prefect](https://img.shields.io/badge/Prefect-3-47377F?style=for-the-badge)](https://www.prefect.io/)
-[![License](https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-<br/>
+## 👾 Project Overview
+ 
+Game storefronts surface thousands of titles through keyword search and popularity rankings, neither of which accounts for *what a game actually feels like to play*. Two games can share identical genres but sit in completely different corners of a player's interest space.
+ 
+This project addresses this in both modeling and engineering terms:
+ 
+- **Semantic discovery** — TF-IDF + Latent Semantic Analysis bridges the gap between games that describe similar gameplay with different words (e.g., *sandbox* vs. *open world*), delivering recommendations that pure keyword search misses.
+- **Explainability** — every recommendation surfaces the shared tags, genres, and TF-IDF features that drove the match, so results don't feel like a black box.
+- **Auxiliary ML tasks** — cold-launch popularity estimation and player archetype profiling (8 playstyle labels) support richer UX and pre-release planning.
+- **Production gap closure** — most student ML projects stop at a notebook. GameMind adds serialized artifacts, API contracts, fixture-based tests, lint, CI, and Docker so the system can be run and verified repeatably by anyone.
 
-**Course project (AI221)** — end-to-end ML pipeline from notebooks to a containerized API and cinematic React UI, with CI, artifact validation, and an IEEE LaTeX report skeleton.
+## 👾 System Architecture
 
-<br/>
+<p align="center">
+  <img src="report/figures/Architecture Diagram.png" alt="System Architecture Diagram" width="85%">
+</p>
 
-[Features](#-features) · [Architecture](#-architecture) · [Quick start](#-quick-start) · [Docker](#-docker) · [API](#-api-reference) · [Project layout](#-project-layout)
+<p align="center">
+  <em>High-level architecture of the system showing data flow and components. The notebook (`Game_Recommender_Simple.ipynb`) handles all training and exports 12 artifact files. The Prefect flow validates those artifacts exist and are structurally valid before the API starts. CI runs independently of the serving path.</em>
+</p>
 
-</div>
-
----
-
-## Features
-
-| Area | What you get |
-|------|----------------|
-| **Training** | `Game_Recommender_Simple.ipynb` — hybrid recommender, popularity regressor, archetype classifier, optional clustering & seasonality; persists **`artifacts/recommender/`**. |
-| **API** | **`app/`** — FastAPI loads serialized models at startup; OpenAPI docs at **`/docs`**. |
-| **UI** | **`frontend/`** — RAWG-inspired React + Vite app: discover, search, detail views, explainability, archetypes, preference-based recs. |
-| **Quality gates** | **Ruff** + **pytest** + smoke **Docker build** on every push/PR (see `.github/workflows/ci.yml`). |
-| **Orchestration** | **`pipelines/`** — Prefect flow checks dataset paths + artifact bundle before deploy. |
-| **Docs** | **`report/`** — IEEE two-column LaTeX (`main.tex`). |
-
----
-
-## Architecture
-
-High-level data flow: **offline notebook → artifact bundle → validation → FastAPI (+ optional React)**.
-
-```mermaid
-flowchart TB
-    subgraph offline["Offline training"]
-        NB["Game_Recommender_Simple.ipynb"]
-        DS["Datasets\nSteam CSV · RAWG JSONL"]
-        ART["artifacts/recommender/\n(joblib · npz · pkl · json)"]
-        DS --> NB
-        NB --> ART
-    end
-
-    subgraph mlops["MLOps & CI"]
-        PF["Prefect flow\n(artifact + source checks)"]
-        CI["GitHub Actions\nlint · test · docker build"]
-        ART -.-> PF
-    end
-
-    subgraph runtime["Runtime"]
-        API["FastAPI\n:8000"]
-        DOC["Docker image\npython:3.12-slim"]
-        FE["React frontend\n:5173 dev"]
-        ART --> API
-        API --- DOC
-        FE -->|"HTTP"| API
-    end
-
-    ART -.->|"compose volume\n(read-only)"| DOC
+## 👾 ML Capabilities
+ 
+### Hybrid Recommender
+ 
+The core recommender scores every game against a query using a weighted blend of three signals:
+ 
 ```
+score = 0.55 × cos_SVD  +  0.30 × cos_TF-IDF  +  0.15 × popularity
+```
+ 
+LSA carries the most weight to capture semantic relationships; TF-IDF preserves direct term overlap; Bayesian-smoothed popularity adds a quality prior. A second inference path accepts a list of liked games, aggregates their LSA vectors into a virtual user profile, and scores the full catalog against it (preference-driven / cold-start mode).
+ 
+**Feature Engineering**: Each game is represented as a weighted text blob: tags (4×), genres (3×), categories (2×), description (1×). Tags receive the highest weight because they are crowd-sourced and highly specific. TF-IDF uses bigrams, sublinear TF scaling, `min_df=2`, and a 50,000-feature vocabulary cap.
+ 
+### Explainability Module
+ 
+For any recommended pair, the module returns overlapping genre labels, Jaccard similarity over tag sets, and the top TF-IDF feature contributions, so every recommendation comes with a human-readable "why."
+ 
+### XGBoost Popularity Regressor
+ 
+Predicts Bayesian-smoothed popularity from content features alone (LSA embeddings + release timing + structural metadata), simulating a cold-start pre-launch scenario.
+ 
+### Player Archetype Classifier
+ 
+A multi-label One-vs-Rest Logistic Regression model trained on 128-dimensional LSA embeddings predicts eight player archetypes from game metadata using weakly supervised labels (Archetypes):
+- Explorer
+- Narrative Nerd
+- Tinkerer
+- Trophy Hunter
+- Thrill-Seeker
+- Grinder
+- Speedrunner
+- Competitor
 
----
+### KMeans Latent Genre Discovery
+ 
+KMeans (k=16, selected by silhouette score) clusters 79,080 games in LSA space, recovering semantically coherent latent genres e.g., *Precision Platformer*, *Boomer Shooter*, *Sokoban/Solitaire*, that official genre labels are too coarse to express.
+ 
+### Seasonality Analysis
+ 
+Monthly seasonal indices are computed for five themes (Horror, Strategy, RPG, Sports, Racing) across 2014–2024 release data. Horror exhibits the strongest signal, with an October peak at 1.60× its monthly average.
 
-## Quick start
-
+## 👾 Quick Start
+ 
 ### Prerequisites
+ 
+- Python 3.11–3.13
+- Node.js 18+ (frontend only)
+- Docker & Docker Compose (container path only)
 
-- **Python 3.11–3.13** (see [`pyproject.toml`](pyproject.toml); **avoid 3.14** on Windows — NumPy/scipy wheels can crash on import).
-- **Node.js 18+** for the frontend.
-- **Docker Desktop** (optional) for container workflows.
-
-### Backend API
-
+ 
+### Option 1 — Local (API + tests)
+ 
+**1. Clone and install**
+ 
 ```bash
+git clone https://github.com/<your-org>/GameRec-MLOps-Pipeline-ML-AI221.git
+cd GameRec-MLOps-Pipeline-ML-AI221
+ 
 python -m venv .venv
-
-# Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
-
-# macOS / Linux
-source .venv/bin/activate
-
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+ 
 pip install -r requirements-dev.txt
-
-# Point at real notebook outputs (default layout: ./artifacts/recommender)
-export GAMEREC_ARTIFACTS_DIR=./artifacts/recommender   # Unix
-# set GAMEREC_ARTIFACTS_DIR=artifacts\recommender     # Windows CMD
-
+```
+ 
+**2. Generate artifacts**
+ 
+Open and run `Game_Recommender_Simple.ipynb` end-to-end. This produces `artifacts/recommender/` with all 12 serialized model files.
+ 
+```bash
+# Optional: validate artifacts before starting the API
+python -m pipelines.flow
+```
+ 
+**3. Start the API**
+ 
+```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-
-Open **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)** for Swagger UI.
-
-Or use Make (requires `make` available):
-
+ 
+Visit [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) — the interactive Swagger UI lets you call every endpoint directly.
+ 
+**4. Run tests**
+ 
 ```bash
-make install && make api
+pytest tests/ -q --tb=short
 ```
-
-### Frontend
-
+ 
+Tests use fixture artifacts under `tests/fixtures/artifacts/` so the full 4 GB dataset is not required for CI.
+ 
+ 
+### Option 2 — Docker Compose
+ 
+```bash
+# Artifacts must exist on the host first (run the notebook)
+docker compose -f docker/docker-compose.yml up --build
+```
+ 
+The compose file mounts `../artifacts/recommender` into the container at `/app/artifacts/recommender` as a read-only bind mount. Artifacts are intentionally *not* baked into the image so the model bundle can be updated without rebuilding.
+ 
+---
+ 
+### Option 3 — Frontend (optional)
+ 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Open **[http://127.0.0.1:5173](http://127.0.0.1:5173)**.
-
-Optional **`frontend/.env.local`**:
-
-```bash
-VITE_API_BASE_URL=http://127.0.0.1:8000
-```
-
-### UI highlights
-
-- Discover hero + trend-style clusters  
-- Search/browse with skeletons and responsive cards  
-- Game detail + recommendation rail + explainability  
-- Player archetype badges via **`/predict/player-type/by-title`**  
-- Cold-start preference recommendations via **`/recommend/user`**  
-- Graceful image fallbacks using catalog metadata  
-
+ 
+Set `VITE_API_BASE_URL` if the API is not on `http://127.0.0.1:8000`.
+ 
 ---
-
-## Docker
-
-Build context must be the **repository root** (includes `app/` and `requirements.txt`):
-
-```bash
-docker build -f docker/Dockerfile -t gamerec-api:latest .
-```
-
-Run with **artifacts mounted read-only** (not baked into the image):
-
-```bash
-docker compose -f docker/docker-compose.yml up --build
-```
-
-- **Image base:** `python:3.12-slim`  
-- **Container port:** **8000** (`uvicorn app.main:app --host 0.0.0.0 --port 8000`)  
-- **Compose** sets `GAMEREC_ARTIFACTS_DIR=/app/artifacts/recommender` and mounts `../artifacts/recommender` → `/app/artifacts/recommender:ro`
-
-Makefile shortcuts: `make docker` · `make docker-up`
-
----
-
-## Required artifacts
-
-Minimum for healthy **`/health`** + core recommender endpoints:
-
-| File | Role |
-|------|------|
-| `catalog.pkl` *(or `catalog.parquet`)* | Game catalog |
-| `tfidf_vectorizer.joblib`, `tfidf_matrix.npz`, `svd.joblib`, `lsa_matrix.npy`, `popularity.npy` | Hybrid text / LSA pipeline |
-| `player_type_classifier.joblib`, `player_types_rules.json` | Archetype classifier |
-| `popularity_regressor.joblib` | Cold-launch popularity |
-
-**Optional** (cluster + seasonality routes):
-
-- `kmeans_clusters.joblib`, `cluster_cards.json`, `seasonality.json`
-
-After training, run the notebook **persistence section** (e.g. Section 17) to refresh files under `artifacts/recommender/`.
-
----
-
-## Makefile targets
-
-| Command | Description |
-|---------|-------------|
-| `make install` | `pip install -r requirements-dev.txt` |
-| `make api` | Uvicorn with reload on `:8000` |
-| `make test` | Pytest |
-| `make lint` | Ruff check + format check |
-| `make format` | Ruff format + auto-fix |
-| `make docker` | Build `gamerec-api:latest` |
-| `make docker-up` | Compose up with volume-mounted artifacts |
-| `make pipeline` | `python -m pipelines.flow` (Prefect validation) |
-| `make fixtures` | Regenerate tiny CI artifacts from real bundle |
-| `make clean` | Remove common caches |
-
----
-
-## API reference
+ 
+### Environment Variables
+ 
+| Variable | Default | Description |
+|---|---|---|
+| `GAMEREC_ARTIFACTS_DIR` | `artifacts/recommender` | Path to serialized model artifacts |
+| `VITE_API_BASE_URL` | `http://127.0.0.1:8000` | API base URL for the React frontend |
+ 
+ 
+## 👾 API reference
 
 <details>
 <summary><strong>Expand endpoint table</strong></summary>
@@ -212,90 +174,116 @@ After training, run the notebook **persistence section** (e.g. Section 17) to re
 | `GET` | `/seasonality/{theme}` | Monthly averages + seasonal index |
 
 </details>
+ 
+## 👾 Project Structure
+<details>
+<summary><strong>Expand project structure</strong></summary>
+    
+```
+.
+├── Game_Recommender_Simple.ipynb   # Training notebook — produces all artifacts
+├── app/                            # FastAPI application
+│   ├── main.py                     # App entry point, artifact loading
+│   └── routers/                    # Route handlers per capability
+├── artifacts/
+│   └── recommender/                # Serialized model bundle (12 files, gitignored)
+│       ├── catalog.pkl
+│       ├── tfidf_vectorizer.joblib
+│       ├── tfidf_matrix.npz
+│       ├── svd_model.joblib
+│       ├── lsa_matrix.npz
+│       ├── popularity_scores.npy
+│       ├── archetype_classifier.joblib
+│       ├── popularity_regressor.joblib
+│       ├── kmeans_clusters.joblib  
+│       ├── cluster_cards.json       
+│       ├── player_types_rules.json
+│       └── seasonality.json        
+├── pipelines/
+│   └── flow.py                     # Prefect artifact validation flow
+├── frontend/                       # React + Vite frontend
+├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+├── tests/
+│   ├── fixtures/
+│   │   └── artifacts/              # Lightweight CI fixtures
+│   └── ...
+├── report/                         # IEEE LaTeX project report
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                  # Lint → Test → Docker smoke build
+│       └── discord-push.yml        # Discord commit notifications
+├── requirements.txt
+├── requirements-dev.txt
+└── pyproject.toml
+```
+    
+</details>
 
----
-
-## Testing & CI
-
-- **Framework:** **pytest** (`tests/`), FastAPI **`TestClient`** where applicable.  
-- **CI:** pushes & PRs to **`main`**, **`master`**, **`develop`** run **lint → test → Docker smoke build** (`.github/workflows/ci.yml`).  
-- **Fixtures:** Large matrices are not committed; CI uses **`tests/fixtures/artifacts/`**. Regenerate after changing training serialization:
-
-  ```bash
-  python -m tests.fixtures.build_fixtures
-  ```
-
-  Then commit updated fixture files.
-
-- **Discord:** optional push notifications via **`DISCORD_WEBHOOK_URL`** secret (`.github/workflows/discord-push.yml`).
-
----
-
-## Prefect pipeline
-
-Validates **Steam CSV** + **RAWG JSONL** paths and checks required files under **`artifacts/recommender/`**. It does **not** run the training notebook (hours of CPU).
-
+## 👾 Data & Artifacts
+<details>
+<summary><strong>Expand project structure</strong></summary>
+    
+### Datasets
+ 
+| Source | Retained after filtering |
+|---|---|
+| Steam | 65,391 games |
+| RAWG | 26,606 games |
+| **Merged catalog** | **79,080 games** |
+ 
+Merging uses a normalized key (`norm_key`) built from lowercase alphanumeric titles. An outer join retains games unique to either source. Popularity scores are Bayesian-smoothed across both rating systems:
+ 
+```
+Score = (v / (v + m)) × R  +  (m / (v + m)) × C
+```
+ 
+### Artifact Files
+ 
+The 12 serialized files in `artifacts/recommender/` are produced entirely by the training notebook and are intentionally excluded from git (they can be several GB). For CI, `tests/fixtures/build_fixtures.py` generates a lightweight stand-in:
+ 
 ```bash
-python -m pipelines.flow
-# or
-make pipeline
+python -m tests.fixtures.build_fixtures
 ```
+ 
+> **Windows users:** Python 3.14 is flagged as risky in `pyproject.toml` due to scientific wheel instability. Use Python 3.11–3.13.
 
-Optional Discord notifications: set **`DISCORD_WEBHOOK_URL`** in the environment. Deployment/scheduling examples: [`pipelines/README.md`](pipelines/README.md).
+</details>
 
----
+## 👥 Contributors
 
-## IEEE report
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Atta-Ur-Rahman-Sheikh">
+        <img src="https://github.com/Atta-Ur-Rahman-Sheikh.png" width="80px;" alt="Atta ur Rahman"/><br>
+        <sub><b>Atta ur Rahman</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Bibz-a">
+        <img src="https://github.com/Bibz-a.png" width="80px;" alt="Labiba Ahmad"/><br>
+        <sub><b>Labiba Ahmad</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/QuratUlainAhmed">
+        <img src="https://github.com/QuratUlainAhmed.png" width="80px;" alt="Qurat Ulain Ahmed"/><br>
+        <sub><b>Qurat Ulain Ahmed</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/maimoonasaboorr">
+        <img src="https://github.com/maimoonasaboorr.png" width="80px;" alt="Maimoona Saboor"/><br>
+        <sub><b>Maimoona Saboor</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
-```bash
-cd report
-pdflatex main.tex
-bibtex main
-pdflatex main.tex
-pdflatex main.tex
-```
 
-See [`report/README.md`](report/README.md) for structure (`sections/*.tex`, `figures/`, `refs.bib`).
-
----
-
-## Project layout
-
-```
-GameRec-MLOps-Pipeline-ML-AI221/
-├── app/                    # FastAPI routers, services, schemas, config
-├── frontend/               # React + Vite UI
-├── pipelines/              # Prefect validation flow
-├── tests/                  # pytest + fixture artifacts builder
-├── docker/                 # Dockerfile + docker-compose.yml
-├── .github/workflows/      # CI + Discord notify
-├── report/                 # IEEE LaTeX paper
-├── Game_Recommender_Simple.ipynb
-├── artifacts/recommender/  # gitignored — produced by notebook
-└── Datasets/               # Steam + RAWG inputs (expected paths for Prefect)
-```
-
----
-
-## Troubleshooting (Windows)
-
-- Use **Python 3.11–3.13** in a **fresh venv**. **3.14** may trigger NumPy **access violations** before tests run.  
-- **`pip` timeouts:** retry or increase retries (`pip install --retries 10`).  
-- **Conflicting global packages** (e.g. old `mlxtend`): use a clean venv with only **`requirements-dev.txt`**.  
-- **Jupyter kernel:** from the project venv run  
-  `python -m ipykernel install --user --name gamerec-mlops --display-name "Python (GameRec .venv)"`  
-  and select that kernel in VS Code.
-
----
-
-## License
-
-This project is released under the **[MIT License](LICENSE)**.
-
----
-
-<div align="center">
-
-<sub>Built for reproducible ML delivery — train offline, validate with Prefect, ship with Docker, browse with React.</sub>
-
-</div>
+## 👾 License
+ 
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+ 
