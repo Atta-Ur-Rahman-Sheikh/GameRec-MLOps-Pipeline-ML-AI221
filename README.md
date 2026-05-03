@@ -56,14 +56,17 @@ Predicts Bayesian-smoothed popularity from content features alone (LSA embedding
 ### Player Archetype Classifier
  
 A multi-label One-vs-Rest Logistic Regression model trained on 128-dimensional LSA embeddings predicts eight player archetypes from game metadata using weakly supervised labels (Archetypes):
-- Explorer
-- Narrative Nerd
-- Tinkerer
-- Trophy Hunter
-- Thrill-Seeker
-- Grinder
-- Speedrunner
-- Competitor
+
+<div style="display:flex; flex-wrap:wrap; gap:6px;">
+  <img src="https://img.shields.io/badge/Explorer-664d00?style=for-the-badge&labelColor=111827"/>
+  <img src="https://img.shields.io/badge/Narrative%20Nerd-6e2a0c?style=for-the-badge&labelColor=111827"/>
+  <img src="https://img.shields.io/badge/Tinkerer-691312?style=for-the-badge&labelColor=111827"/>
+  <img src="https://img.shields.io/badge/Trophy%20Hunter-5d0933?style=for-the-badge&labelColor=111827"/>
+  <img src="https://img.shields.io/badge/Thrill%20Seeker-291938?style=for-the-badge&labelColor=111827"/>
+  <img src="https://img.shields.io/badge/Grinder-042d3a?style=for-the-badge&labelColor=111827"/>
+  <img src="https://img.shields.io/badge/Speedrunner-12403c?style=for-the-badge&labelColor=111827"/>
+  <img src="https://img.shields.io/badge/Competitor-475200?style=for-the-badge&labelColor=111827"/>
+</div>
 
 ### KMeans Latent Genre Discovery
  
@@ -131,7 +134,6 @@ docker compose -f docker/docker-compose.yml up --build
  
 The compose file mounts `../artifacts/recommender` into the container at `/app/artifacts/recommender` as a read-only bind mount. Artifacts are intentionally *not* baked into the image so the model bundle can be updated without rebuilding.
  
----
  
 ### Option 3 — Frontend (optional)
  
@@ -142,8 +144,7 @@ npm run dev
 ```
  
 Set `VITE_API_BASE_URL` if the API is not on `http://127.0.0.1:8000`.
- 
----
+
  
 ### Environment Variables
  
