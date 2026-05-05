@@ -252,7 +252,7 @@ python -m tests.fixtures.build_fixtures
 
 </details>
 
-## 👥 Contributors
+## 👾 Contributors
 
 <table align="center">
   <tr>
