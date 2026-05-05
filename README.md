@@ -234,7 +234,7 @@ Set `VITE_API_BASE_URL` if the API is not on `http://127.0.0.1:8000`.
 | RAWG | 26,606 games |
 | **Merged catalog** | **79,080 games** |
  
-Merging uses a normalized key (`norm_key`) built from lowercase alphanumeric titles. An outer join retains games unique to either source. Popularity scores are Bayesian-smoothed across both rating systems:
+Merging uses a normalized key (`norm_key`) built from lowercase alphanumeric titles. An outer join retains games unique to either source. Popularity scores are Bayesian-smoothed across both rating systems: 
  
 ```
 Score = (v / (v + m)) × R  +  (m / (v + m)) × C
