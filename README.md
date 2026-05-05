@@ -259,7 +259,7 @@ python -m tests.fixtures.build_fixtures
     <td align="center">
       <a href="https://github.com/Atta-Ur-Rahman-Sheikh">
         <img src="https://github.com/Atta-Ur-Rahman-Sheikh.png" width="80px;" alt="Atta ur Rahman"/><br>
-        <sub><b>Atta ur Rahman</b></sub>
+        <sub><b>Atta Ur Rahman</b></sub>
       </a>
     </td>
     <td align="center">
